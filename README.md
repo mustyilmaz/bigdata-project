@@ -1,8 +1,7 @@
 # Big Data Project
 
 ## IMPORTANT
-Before starting the installation process, ensure that you have Java installed on your system. 
-Ensure that Java is installed on your system by running the following command in your Terminal:
+Before starting the installation process,ensure that Java is installed on your system by running the following command in your Terminal:
 ```bash
     java -version
 ```
