@@ -1,7 +1,5 @@
 # Big Data Project
 
-This document outlines the steps required for the Big Data project.
-
 ## Apache Kafka Installation (Mac)
 
 Follow the instructions at [this link](https://www.conduktor.io/kafka/how-to-install-apache-kafka-on-mac/) to install Kafka on Mac.
