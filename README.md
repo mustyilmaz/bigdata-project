@@ -23,9 +23,19 @@ Follow the instructions at [this link](https://www.conduktor.io/kafka/how-to-ins
     source ~/.zshrc
     ```
 
-## Starting Zookeeper
+## Starting Kafka and Creating a Topic
 
-Run the following command to start Zookeeper:
-```bash
-zookeeper-server-start.sh /Users/mustafayilmaz/Desktop/bigdata/kafka_2.13-3.6.2/config zookeeper.properties
-```
+1. **Starting Zookeeper:** Run the following command to start Zookeeper:
+    ```bash
+    zookeeper-server-start.sh /Users/mustafayilmaz/Desktop/bigdata/kafka_2.13-3.6.2/config zookeeper.properties
+    ```
+
+2. **Starting Kafka:** Run the following command to start Kafka:
+    ```bash
+    kafka-server-start.sh /Users/mustafayilmaz/Desktop/bigdata/kafka_2.13-3.6.2/config/server.properties
+    ```
+
+3. **Creating a Topic:** To create a topic named `coin_data`, use the following command:
+    ```bash
+    kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic coin_data
+    ```
