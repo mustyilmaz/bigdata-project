@@ -44,23 +44,26 @@ def fetch_coin_prices():
     if 'status' in data and 'error_message' in data['status'] and data['status']['error_message'] is not None:
         error_code = data['status']['error_code']
         error_message = data['status']['error_message']
-        print(f"There is a error! Error code: {error_code}, Error message: {error_message}")
+        print(f"Error code: {error_code}, Error message: {error_message}")
         return None
     
     coin_instant_data = {}
     timestamp = data['status']['timestamp']
+    coin_instant_data['timestamp'] = timestamp
     for coin in data['data']:
         if coin['id'] in coin_info:
             coin_id = coin['id']
             coin_slug = coin_info[coin_id]['slug']
             coin_symbol = coin_info[coin_id]['symbol']
             coin_price = coin['quote']['USD']['price']
-            coin_instant_data[coin_slug] = {'symbol': coin_symbol, 'price': coin_price, 'timestamp': timestamp}
-            
+            coin_instant_data[coin_slug] = {'symbol': coin_symbol, 'price': coin_price}
+    
+    
     return coin_instant_data
 
 while True:
     coin_data = fetch_coin_prices()
+    print(coin_data)
     producer.send(kafka_topic_name,value=coin_data)
-    time.sleep(10) #every 10 second
+    time.sleep(60) #every 60 second
 
