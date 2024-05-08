@@ -6,7 +6,7 @@ Ensure that Java is installed on your system by running the following command in
 ```bash
     java -version
 ```
-If not, download and install it from the [official Java website (https://www.oracle.com/java/technologies/javase-jdk11-downloads.html) according to your operating system.
+If not, download and install it from the [official Java website](https://www.oracle.com/java/technologies/javase-jdk11-downloads.html) according to your operating system.
 
 ## Apache Kafka Installation (Mac)
 
