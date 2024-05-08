@@ -47,19 +47,14 @@ Follow the instructions at [this link](https://www.conduktor.io/kafka/how-to-ins
     kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic coin_data
     ```
 
-## Apache Spark Installation (pip)
+## Apache Spark Installation (with pip)
 
 1. **Install Apache Spark:** Install Apache Spark using pip by running the following command in your Terminal:
     ```bash
     pip install pyspark
     ```
 
-2. **Verify Java Installation:** Before proceeding, ensure that Java is installed on your system by running the following command in your Terminal:
-    ```bash
-    java -version
-    ```
-
-3. **Start Using Apache Spark:** Once the installation is complete, you can start using Apache Spark in your Python environment.
+2. **Start Using Apache Spark:** Once the installation is complete, you can start using Apache Spark in your Python environment.
 
 ## Kafka-Python Installation
 
