@@ -33,7 +33,7 @@ Follow the instructions at [this link](https://www.conduktor.io/kafka/how-to-ins
 
 1. **Starting Zookeeper:** Run the following command to start Zookeeper:
     ```bash
-    zookeeper-server-start.sh /Users/mustafayilmaz/Desktop/bigdata/kafka_2.13-3.6.2/config zookeeper.properties
+    zookeeper-server-start.sh /Users/mustafayilmaz/Desktop/bigdata/kafka_2.13-3.6.2/config/zookeeper.properties
     ```
 
 2. **Starting Kafka:** Run the following command to start Kafka:
