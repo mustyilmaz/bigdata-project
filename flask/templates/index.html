@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Crypto Data Visualization</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <style>
+        #container {
+            display: flex;
+            justify-content: row-reverse;
+            align-items: center;
+        }
+        #chart {
+            width: 70%;
+            margin-right: 20px; /* Sağ tarafta bir boşluk bırakmak için */
+        }
+        #table-container {
+            width: 25%;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+        #table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Crypto Data Visualization</h1>
+    <div id="container">
+        <div id="chart"></div>
+        <div id="table-container">
+            <table id="table"></table>
+        </div>
+    </div>
+    <script>
+        function fetchData() {
+            fetch('http://127.0.0.1:5000/data')
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Data geldi mi data",data)
+                    if (data.length < 2) {
+                        console.log("Not enough data to visualize");
+                        return; 
+                    }
+                    
+                    const previous = data[0];
+                    const latest = data[1];
+
+                    const chartData = Object.entries(latest).filter(([key, value]) => key !== 'timestamp');
+
+                    // Clear previous SVG
+                    d3.select("#chart").selectAll("*").remove();
+
+                    const svg = d3.select("#chart").append("svg")
+                        .attr("width", 500)
+                        .attr("height", 300);
+
+                    const margin = {top: 20, right: 20, bottom: 30, left: 40};
+                    const width = +svg.attr("width") - margin.left - margin.right;
+                    const height = +svg.attr("height") - margin.top - margin.bottom;
+
+                    const x = d3.scaleBand().rangeRound([0, width]).padding(0.1);
+                    const y = d3.scaleLinear().rangeRound([height, 0]);
+
+                    const g = svg.append("g")
+                        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+                    x.domain(chartData.map(d => d[0]));
+                    y.domain([0, d3.max(chartData, d => d[1].price)]);
+
+                    g.append("g")
+                        .attr("class", "axis axis--x")
+                        .attr("transform", `translate(0,${height})`)
+                        .call(d3.axisBottom(x));
+
+                    g.append("g")
+                        .attr("class", "axis axis--y")
+                        .call(d3.axisLeft(y).ticks(10, "$"))
+                      .append("text")
+                        .attr("transform", "rotate(-90)")
+                        .attr("y", 6)
+                        .attr("dy", "0.71em")
+                        .attr("text-anchor", "end")
+                        .text("Price");
+
+                    g.selectAll(".bar")
+                      .data(chartData)
+                      .enter().append("rect")
+                        .attr("class", "bar")
+                        .attr("x", d => x(d[0]))
+                        .attr("y", d => y(d[1].price))
+                        .attr("width", x.bandwidth())
+                        .attr("height", d => height - y(d[1].price))
+                        .attr("fill", "steelblue");
+
+                    const table = d3.select("#table");
+                    table.selectAll("*").remove();
+
+                    const thead = table.append("thead");
+                    const tbody = table.append("tbody");
+        
+                    thead.append("tr")
+                        .selectAll("th")
+                        .data(["Name", "Previous", "Actual", "Percentage Change"])
+                        .enter()
+                        .append("th")
+                        .text(d => d);
+        
+                    const rows = tbody.selectAll("tr")
+                        .data(chartData)
+                        .enter()
+                        .append("tr");
+        
+                    const cells = rows.selectAll("td")
+                        .data(d => {
+                            const price = d[1].price;
+                            const previousPrice = previous[d[0]].price;
+                            const percentage = ((price - previousPrice) / previousPrice * 100).toFixed(2);
+                            return [d[0], previousPrice, price, `${percentage}%`];
+                        })
+                        .enter()
+                        .append("td")
+                        .text(d => d);
+                    
+                    const timestampRow = tbody.append("tr");
+                    timestampRow.append("td").text("Timestamp");
+                    timestampRow.append("td").text(previous.timestamp);
+                    timestampRow.append("td").text(latest.timestamp);
+                    timestampRow.append("td").text("");
+                }).catch(error => console.error("Error fetching data:", error));   
+        }
+        fetchData(); // Fetch data on initial load
+        setInterval(fetchData, 50000); // Fetch data every 5 minutes
+    </script>
+</body>
+</html>
