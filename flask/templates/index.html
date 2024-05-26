@@ -1,144 +1,142 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crypto Data Visualization</title>
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <style>
-        #container {
+        body {
             display: flex;
-            justify-content: row-reverse;
+            flex-direction: column;
+            justify-content: center;
             align-items: center;
-        }
-        #chart {
-            width: 70%;
-            margin-right: 20px; /* Sağ tarafta bir boşluk bırakmak için */
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
         }
         #table-container {
-            width: 25%;
-            padding: 10px;
-            border: 1px solid #ccc;
+            width: 80%;
+            padding: 20px;
+            border: 1px solid #444;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            background-color: #1e1e1e;
+            border-radius: 8px;
         }
         #table {
             width: 100%;
             border-collapse: collapse;
+            color: #e0e0e0;
         }
         th, td {
-            padding: 8px;
+            padding: 12px;
             text-align: left;
-            border-bottom: 1px solid #ddd;
+            border-bottom: 1px solid #333;
         }
         th {
-            background-color: #f2f2f2;
+            background-color: #333;
+            font-weight: bold;
+        }
+        h1 {
+            margin-bottom: 20px;
+            text-align: center;
+            color: #e0e0e0;
+        }
+        footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #666;
+        }
+        .positive {
+            color: #00e676; /* Green */
+        }
+        .negative {
+            color: #ff1744; /* Red */
         }
     </style>
 </head>
 <body>
     <h1>Crypto Data Visualization</h1>
-    <div id="container">
-        <div id="chart"></div>
-        <div id="table-container">
-            <table id="table"></table>
-        </div>
+    <div id="table-container">
+        <table id="table"></table>
     </div>
+    <footer>&copy; 2024 Prepared by Mustafa YILMAZ</footer>
+
     <script>
         function fetchData() {
-            fetch('http://127.0.0.1:5000/data')
-                .then(response => response.json())
-                .then(data => {
-                    console.log("Data geldi mi data",data)
-                    if (data.length < 2) {
-                        console.log("Not enough data to visualize");
-                        return; 
-                    }
-                    
-                    const previous = data[0];
-                    const latest = data[1];
+            Promise.all([
+                fetch('http://127.0.0.1:5000/data').then(response => response.json()),
+                fetch('http://127.0.0.1:5000/predictions').then(response => response.json())
+            ]).then(([data, predictions]) => {
+                console.log("Data received:", data);
+                console.log("Predictions received:", predictions);
+                
+                if (data.length < 2 || predictions.length < 2) {
+                    console.log("Not enough data to visualize");
+                    return; 
+                }
 
-                    const chartData = Object.entries(latest).filter(([key, value]) => key !== 'timestamp');
+                const previous = data[0];
+                const latest = data[1];
+                const prediction = predictions[0];
+                const next_predict = predictions[1];
 
-                    // Clear previous SVG
-                    d3.select("#chart").selectAll("*").remove();
+                const chartData = Object.entries(latest).filter(([key, value]) => key !== 'timestamp' && value.price !== undefined);
 
-                    const svg = d3.select("#chart").append("svg")
-                        .attr("width", 500)
-                        .attr("height", 300);
+                const table = d3.select("#table");
+                table.selectAll("*").remove();
 
-                    const margin = {top: 20, right: 20, bottom: 30, left: 40};
-                    const width = +svg.attr("width") - margin.left - margin.right;
-                    const height = +svg.attr("height") - margin.top - margin.bottom;
+                const thead = table.append("thead");
+                const tbody = table.append("tbody");
 
-                    const x = d3.scaleBand().rangeRound([0, width]).padding(0.1);
-                    const y = d3.scaleLinear().rangeRound([height, 0]);
+                thead.append("tr")
+                    .selectAll("th")
+                    .data(["Name", "Previous", "Actual", "Percentage Change", "Prediction", "Prediction Error", "Next Prediction"])
+                    .enter()
+                    .append("th")
+                    .text(d => d);
 
-                    const g = svg.append("g")
-                        .attr("transform", `translate(${margin.left},${margin.top})`);
+                const rows = tbody.selectAll("tr")
+                    .data(chartData)
+                    .enter()
+                    .append("tr");
 
-                    x.domain(chartData.map(d => d[0]));
-                    y.domain([0, d3.max(chartData, d => d[1].price)]);
+                rows.selectAll("td")
+                    .data(d => {
+                        const name = d[0];
+                        const price = d[1].price;
+                        const previousPrice = previous[name].price;
+                        const percentageChange = ((price - previousPrice) / previousPrice * 100).toFixed(2);
+                        const predictedPrice = prediction[name] ? prediction[name].price : "N/A";
+                        const next_predict_value = next_predict[name] ? next_predict[name].price : "N/A";
+                        const predictionError = predictedPrice !== "N/A" ? ((price - predictedPrice) / predictedPrice * 100).toFixed(2) : "N/A";
+                        return [name, previousPrice, price, `${percentageChange}%`, predictedPrice, `${predictionError}%`, next_predict_value];
+                    })
+                    .enter()
+                    .append("td")
+                    .text(d => d)
+                    .attr("class", (d, i) => {
+                        if (i === 3) { // Percentage Change column
+                            return d.includes('-') ? 'negative' : 'positive';
+                        }
+                        return null;
+                    });
 
-                    g.append("g")
-                        .attr("class", "axis axis--x")
-                        .attr("transform", `translate(0,${height})`)
-                        .call(d3.axisBottom(x));
-
-                    g.append("g")
-                        .attr("class", "axis axis--y")
-                        .call(d3.axisLeft(y).ticks(10, "$"))
-                      .append("text")
-                        .attr("transform", "rotate(-90)")
-                        .attr("y", 6)
-                        .attr("dy", "0.71em")
-                        .attr("text-anchor", "end")
-                        .text("Price");
-
-                    g.selectAll(".bar")
-                      .data(chartData)
-                      .enter().append("rect")
-                        .attr("class", "bar")
-                        .attr("x", d => x(d[0]))
-                        .attr("y", d => y(d[1].price))
-                        .attr("width", x.bandwidth())
-                        .attr("height", d => height - y(d[1].price))
-                        .attr("fill", "steelblue");
-
-                    const table = d3.select("#table");
-                    table.selectAll("*").remove();
-
-                    const thead = table.append("thead");
-                    const tbody = table.append("tbody");
-        
-                    thead.append("tr")
-                        .selectAll("th")
-                        .data(["Name", "Previous", "Actual", "Percentage Change"])
-                        .enter()
-                        .append("th")
-                        .text(d => d);
-        
-                    const rows = tbody.selectAll("tr")
-                        .data(chartData)
-                        .enter()
-                        .append("tr");
-        
-                    const cells = rows.selectAll("td")
-                        .data(d => {
-                            const price = d[1].price;
-                            const previousPrice = previous[d[0]].price;
-                            const percentage = ((price - previousPrice) / previousPrice * 100).toFixed(2);
-                            return [d[0], previousPrice, price, `${percentage}%`];
-                        })
-                        .enter()
-                        .append("td")
-                        .text(d => d);
-                    
-                    const timestampRow = tbody.append("tr");
-                    timestampRow.append("td").text("Timestamp");
-                    timestampRow.append("td").text(previous.timestamp);
-                    timestampRow.append("td").text(latest.timestamp);
-                    timestampRow.append("td").text("");
-                }).catch(error => console.error("Error fetching data:", error));   
+                const timestampRow = tbody.append("tr");
+                timestampRow.append("td").text("Timestamp");
+                timestampRow.append("td").text(previous.timestamp);
+                timestampRow.append("td").text(latest.timestamp);
+                timestampRow.append("td").text("");
+                timestampRow.append("td").text(prediction ? prediction.timestamp : "N/A");
+                timestampRow.append("td").text("");
+                timestampRow.append("td").text(next_predict ? next_predict.timestamp : "N/A");
+            }).catch(error => console.error("Error fetching data:", error));
         }
+
         fetchData(); // Fetch data on initial load
-        setInterval(fetchData, 50000); // Fetch data every 5 minutes
+        setInterval(fetchData, 60000); // Fetch data every 1 minute
     </script>
 </body>
 </html>
